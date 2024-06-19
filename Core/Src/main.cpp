@@ -16,10 +16,22 @@
   */
 /* Includes ------------------------------------------------------------------*/
 #include <stdio.h>
+#include <string.h>
 
 #include "main.h"
 #include "stm32746g_discovery.h"
 #include "stm32746g_discovery_lcd.h"
+
+#include "tensorflow/lite/core/c/common.h"
+#include "tensorflow/lite/micro/micro_interpreter.h"
+#include "tensorflow/lite/micro/micro_log.h"
+#include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
+#include "tensorflow/lite/micro/micro_profiler.h"
+#include "tensorflow/lite/micro/recording_micro_interpreter.h"
+#include "tensorflow/lite/micro/system_setup.h"
+#include "tensorflow/lite/schema/schema_generated.h"
+
+#include "traffic_sign.h"
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
@@ -27,6 +39,29 @@ static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
 
 UART_HandleTypeDef huart1;
+
+extern unsigned char image[24300];
+
+using OpResolver = tflite::MicroMutableOpResolver<8>;
+
+/* Used by TFLite error_reporter */
+void DebugLog(const char *s)
+{
+	fprintf(stderr, "%s", s);
+}
+
+TfLiteStatus Register_Ops(OpResolver& op_resolver)
+{
+	TF_LITE_ENSURE_STATUS(op_resolver.AddConv2D());
+	TF_LITE_ENSURE_STATUS(op_resolver.AddDequantize());
+	TF_LITE_ENSURE_STATUS(op_resolver.AddFullyConnected());
+	TF_LITE_ENSURE_STATUS(op_resolver.AddMaxPool2D());
+	TF_LITE_ENSURE_STATUS(op_resolver.AddQuantize());
+	TF_LITE_ENSURE_STATUS(op_resolver.AddRelu());
+	TF_LITE_ENSURE_STATUS(op_resolver.AddReshape());
+	TF_LITE_ENSURE_STATUS(op_resolver.AddSoftmax());
+	return kTfLiteOk;
+}
 
 /**
   * @brief  The application entry point.
@@ -70,14 +105,56 @@ int main(void)
 	BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
 	BSP_LCD_SetFont(&LCD_DEFAULT_FONT);
 
-	BSP_LCD_DisplayStringAtLine(0, (uint8_t *)"Hello World");
+	BSP_LCD_DisplayStringAtLine(0, (uint8_t *)"Hello World!");
 
-	printf("Hello World!\n\r");
+	printf("Hello World!\r\n");
 
-	while (1)
+	tflite::MicroProfiler profiler;
+	OpResolver op_resolver;
+	TF_LITE_ENSURE_STATUS(Register_Ops(op_resolver));
+
+	// Arena size just a round number. The exact arena usage can be determined
+	// using the RecordingMicroInterpreter.
+	constexpr int kTensorArenaSize = 70 * 1024;
+	uint8_t tensor_arena[kTensorArenaSize];
+	constexpr int kNumResourceVariables = 48;
+
+	tflite::RecordingMicroAllocator* allocator(
+	  tflite::RecordingMicroAllocator::Create(tensor_arena, kTensorArenaSize));
+	tflite::RecordingMicroInterpreter interpreter(
+	  tflite::GetModel(traffic_sign_model), op_resolver, allocator,
+	  tflite::MicroResourceVariables::Create(allocator, kNumResourceVariables),
+	  &profiler);
+
+
+	TF_LITE_ENSURE_STATUS(interpreter.AllocateTensors());
+	TFLITE_CHECK_EQ(interpreter.inputs_size(), 1);
+	TFLITE_DCHECK_EQ(interpreter.input(0)->bytes, sizeof(image));
+
+	memcpy(interpreter.input(0)->data.uint8, image, interpreter.input(0)->bytes);
+
+	TF_LITE_ENSURE_STATUS(interpreter.Invoke());
+
+	unsigned char max = 0;
+	int idx = 0;
+	for (int i = 0; i < 58; i++)
 	{
-		printf("1");
+		unsigned char result = interpreter.output(0)->data.uint8[i];
+
+		printf("%d: %d\r\n", i, result);
+		if (result > max)
+		{
+			idx = i;
+			max = result;
+		}
 	}
+
+	printf("\r\nmax: (%d, %d)\r\n", idx, max);
+
+	// profiler.Log();
+	// interpreter.GetMicroAllocator().PrintAllocations();
+
+	while (1);
 }
 
 /**
