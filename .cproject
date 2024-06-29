@@ -51,6 +51,7 @@
 									<listOptionValue builtIn="false" value="../Drivers/BSP/Inc"/>
 									<listOptionValue builtIn="false" value="../Model/Inc"/>
 									<listOptionValue builtIn="false" value="../ThirdParty/CMSIS-DSP/Inc"/>
+									<listOptionValue builtIn="false" value="../ThirdParty/CMSIS-NN/Inc"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.2046583061" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -71,6 +72,7 @@
 									<listOptionValue builtIn="false" value="../Drivers/BSP/Inc"/>
 									<listOptionValue builtIn="false" value="../Model/Inc"/>
 									<listOptionValue builtIn="false" value="../ThirdParty/CMSIS-DSP/Inc"/>
+									<listOptionValue builtIn="false" value="../ThirdParty/CMSIS-NN/Inc"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp.1469761655" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp"/>
 							</tool>
