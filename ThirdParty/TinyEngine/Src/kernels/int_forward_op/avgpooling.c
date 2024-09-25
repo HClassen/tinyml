@@ -16,24 +16,22 @@
  * Target ISA:  ARMv7E-M
  * -------------------------------------------------------------------- */
 
-#include "tinyengine_function.h"
+#include <tinyengine/types.h>
+#include <tinyengine/base_ops.h>
 
-tinyengine_status avg_pooling(const q7_t* input, const uint16_t input_h, const uint16_t input_w,
-		const uint16_t input_c,	const uint16_t sample_h, const uint16_t sample_w,
-		const uint16_t output_h, const uint16_t output_w, const int32_t out_activation_min,
-        const int32_t out_activation_max, q7_t* output)
-{
-	int h, w, c;
-	int sh, sw;
+tinyengine_status avg_pooling(const q7_t* input, const uint16_t input_h, const uint16_t input_w, const uint16_t input_c,
+							  const uint16_t sample_h, const uint16_t sample_w, const uint16_t output_h,
+							  const uint16_t output_w, const int32_t out_activation_min,
+							  const int32_t out_activation_max, q7_t* output) {
 	const int divider_half = ((sample_h * sample_w) / 2);
-	for(c = 0; c < input_c; c++){
-		for(h = 0; h < output_h; h++){
-			for(w = 0; w < output_w; w++){
+	for (int c = 0; c < input_c; c++) {
+		for (int h = 0; h < output_h; h++) {
+			for (int w = 0; w < output_w; w++) {
 				int avg = 0;
 
-				for(sh = 0; sh < sample_h; sh++){
+				for (int sh = 0; sh < sample_h; sh++) {
 					int height = sh + h * sample_h;
-					for(sw = 0; sw < sample_w; sw++){
+					for (int sw = 0; sw < sample_w; sw++) {
 						int width = sw + w * sample_w;
 						avg += input[(width + height * input_w) * input_c + c];
 					}
@@ -53,5 +51,3 @@ tinyengine_status avg_pooling(const q7_t* input, const uint16_t input_h, const u
 		}
 	}
 }
-
-

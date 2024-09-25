@@ -17,27 +17,24 @@
  * Target ISA:  ARMv7E-M
  * -------------------------------------------------------------------- */
 
+#include <tinyengine/types.h>
+#include <tinyengine/base_ops.h>
+
 #include "arm_math.h"
 #include "arm_nnfunctions.h"
 #include "arm_nnsupportfunctions.h"
 #include "img2col_element.h"
-#include "tinyengine_function.h"
 
-tinyengine_status convolve_s8_kernel3_stride1_pad1(const q7_t *input, const uint16_t input_x, const uint16_t input_y,
-		const uint16_t input_ch, const q7_t *kernel, const int32_t *bias,
-		const int32_t *output_shift, const int32_t *output_mult,
-		const int32_t output_offset, const int32_t input_offset,
-		const int32_t output_activation_min,
-		const int32_t output_activation_max, q7_t *output,
-		const uint16_t output_x, const uint16_t output_y,
-		const uint16_t output_ch, q15_t *runtime_buf, q7_t pad_value) {
+tinyengine_status convolve_s8_kernel3_stride1_pad1(const q7_t *input, const uint16_t input_x, const uint16_t input_y, const uint16_t input_ch, const q7_t *kernel,
+	                                               const int32_t *bias, const int32_t *output_shift, const int32_t *output_mult, const int32_t output_offset,
+	                                               const int32_t input_offset, const int32_t output_activation_min, const int32_t output_activation_max, q7_t *output,
+	                                               const uint16_t output_x, const uint16_t output_y, const uint16_t output_ch, q15_t *runtime_buf, q7_t pad_value) {
 	if (input_ch % 4 != 0) {
 		return PARAM_NO_SUPPORT;
 	}
 
-	int32_t i_element;
-	(void) input_x;
-	(void) input_y;
+	(void)input_x;
+	(void)input_y;
 
 	/* Partial(two columns) im2col buffer */
 	q15_t *two_column_buffer = runtime_buf;
@@ -54,7 +51,7 @@ tinyengine_status convolve_s8_kernel3_stride1_pad1(const q7_t *input, const uint
 		const int16_t base_idx_y = i_out_y - 1;
 		for (int i_out_x = 0; i_out_x < output_x; i_out_x++) {
 			const int16_t base_idx_x = i_out_x - 1;
-			//Img2col for 3x3 kernel
+			// Img2col for 3x3 kernel
 			/* Used for SIMD instructions  */
 			q31_t in_q7x4;
 			q31_t in_q15x2_1;
@@ -64,12 +61,12 @@ tinyengine_status convolve_s8_kernel3_stride1_pad1(const q7_t *input, const uint
 			int block_cnt;
 			q15_t *col_buffer = &two_column_buffer[0];
 
-			//TODO: swap these two if statement out to reduce overhead
-			int ypad_cnt = 0; //no pad by default
-			if (base_idx_y == -1) { //pad the first row
-				q31_t *dst_31 = (q31_t*) &col_buffer[0];
-				int block_cnt = channel_div4;//unroll by 2, 3 element
-				while (block_cnt > 0) {//total: 16bit * input_ch * 3
+			// TODO: swap these two if statement out to reduce overhead
+			int ypad_cnt = 0;		// no pad by default
+			if (base_idx_y == -1) { // pad the first row
+				q31_t *dst_31 = (q31_t *)&col_buffer[0];
+				int block_cnt = channel_div4; // unroll by 2, 3 element
+				while (block_cnt > 0) {		  // total: 16bit * input_ch * 3
 					*dst_31++ = pad_out_q15x2;
 					*dst_31++ = pad_out_q15x2;
 					*dst_31++ = pad_out_q15x2;
@@ -79,11 +76,10 @@ tinyengine_status convolve_s8_kernel3_stride1_pad1(const q7_t *input, const uint
 					block_cnt--;
 				}
 				ypad_cnt = 1;
-			}
-			else if (base_idx_y + 2 == input_y) { //pad the third row
-				q31_t *dst_31 = (q31_t*) &col_buffer[input_ch * 6];
-				int block_cnt = channel_div4;//unroll by 2, 3 element
-				while (block_cnt > 0) {//total: 16bit * input_ch * 3
+			} else if (base_idx_y + 2 == input_y) { // pad the third row
+				q31_t *dst_31 = (q31_t *)&col_buffer[input_ch * 6];
+				int block_cnt = channel_div4; // unroll by 2, 3 element
+				while (block_cnt > 0) {		  // total: 16bit * input_ch * 3
 					*dst_31++ = pad_out_q15x2;
 					*dst_31++ = pad_out_q15x2;
 					*dst_31++ = pad_out_q15x2;
@@ -95,12 +91,12 @@ tinyengine_status convolve_s8_kernel3_stride1_pad1(const q7_t *input, const uint
 				ypad_cnt = 2;
 			}
 
-			if (ypad_cnt == 0){ //filled all rows
+			if (ypad_cnt == 0) { // filled all rows
 				if (base_idx_x == -1) {
 					/* use pad for the first 1 col */
-					q31_t *dst_31 = (q31_t*) &col_buffer[0];
-					q31_t *dst2_31 = (q31_t*) &col_buffer[input_ch * 3];
-					q31_t *dst3_31 = (q31_t*) &col_buffer[input_ch * 6];
+					q31_t *dst_31 = (q31_t *)&col_buffer[0];
+					q31_t *dst2_31 = (q31_t *)&col_buffer[input_ch * 3];
+					q31_t *dst3_31 = (q31_t *)&col_buffer[input_ch * 6];
 
 					pad_3row_1col(dst_31, dst2_31, dst3_31, pad_out_q15x2)
 
@@ -115,35 +111,34 @@ tinyengine_status convolve_s8_kernel3_stride1_pad1(const q7_t *input, const uint
 					load_3row_2col(src, src2, src3, dst, dst2, dst3)
 				} else if (base_idx_x + 2 == input_x) {
 					/* load 2 col */
-					const q7_t *src = input	+ (base_idx_y * input_x + base_idx_x) * input_ch;
+					const q7_t *src = input + (base_idx_y * input_x + base_idx_x) * input_ch;
 					const q7_t *src2 = src + in_row_offset;
 					const q7_t *src3 = src2 + in_row_offset;
-					q15_t *dst = (q31_t*) &col_buffer[0];;
-					q15_t *dst2 = (q31_t*) &col_buffer[input_ch * 3];
-					q15_t *dst3 = (q31_t*) &col_buffer[input_ch * 6];;
+					q15_t *dst = (q31_t *)&col_buffer[0];
+					q15_t *dst2 = (q31_t *)&col_buffer[input_ch * 3];
+					q15_t *dst3 = (q31_t *)&col_buffer[input_ch * 6];
 
 					load_3row_2col(src, src2, src3, dst, dst2, dst3)
 
-					q31_t *dst_31 = (q31_t*) dst;
-					q31_t *dst2_31 = (q31_t*) dst2;
-					q31_t *dst3_31 = (q31_t*) dst3;
+					q31_t *dst_31 = (q31_t *)dst;
+					q31_t *dst2_31 = (q31_t *)dst2;
+					q31_t *dst3_31 = (q31_t *)dst3;
 
 					/* use pad for the last 1 col*/
-					pad_3row_1col(dst_31,dst2_31,dst3_31,pad_out_q15x2)
+					pad_3row_1col(dst_31, dst2_31, dst3_31, pad_out_q15x2)
 				} else {
 					/* load 3 col */
-					const q7_t *src = input	+ (base_idx_y * input_x + base_idx_x) * input_ch;
+					const q7_t *src = input + (base_idx_y * input_x + base_idx_x) * input_ch;
 					const q7_t *src2 = src + in_row_offset;
 					const q7_t *src3 = src2 + in_row_offset;
-					q15_t *dst = (q31_t*) &col_buffer[0];;
-					q15_t *dst2 = (q31_t*) &col_buffer[input_ch * 3];
-					q15_t *dst3 = (q31_t*) &col_buffer[input_ch * 6];;
+					q15_t *dst = (q31_t *)&col_buffer[0];
+					q15_t *dst2 = (q31_t *)&col_buffer[input_ch * 3];
+					q15_t *dst3 = (q31_t *)&col_buffer[input_ch * 6];
 
 					load_3row_3col(src, src2, src3, dst, dst2, dst3)
 				}
-			}
-			else if (ypad_cnt == 1){//filled the last two rows
-				if (base_idx_x == -1){
+			} else if (ypad_cnt == 1) { // filled the last two rows
+				if (base_idx_x == -1) {
 					/* use pad for the first 1 col */
 					q31_t *dst_31 = &col_buffer[input_ch * 3];
 					q31_t *dst2_31 = &col_buffer[input_ch * 6];
@@ -163,14 +158,12 @@ tinyengine_status convolve_s8_kernel3_stride1_pad1(const q7_t *input, const uint
 					const q7_t *src = input + base_idx_x * input_ch;
 					const q7_t *src2 = src + in_row_offset;
 
-					load_2row_2col(src, src2, dst, dst2)
-					q31_t *dst_31 = (q31_t*) dst;
-					q31_t *dst2_31 = (q31_t*) dst2;
+					load_2row_2col(src, src2, dst, dst2) q31_t *dst_31 = (q31_t *)dst;
+					q31_t *dst2_31 = (q31_t *)dst2;
 
 					/* use pad for the last 1 col*/
-					pad_2row_1col(dst_31,dst2_31,pad_out_q15x2)
-				}
-				else {
+					pad_2row_1col(dst_31, dst2_31, pad_out_q15x2)
+				} else {
 					/* load 3 col*/
 					q15_t *dst = &col_buffer[input_ch * 3];
 					q15_t *dst2 = &col_buffer[input_ch * 6];
@@ -179,11 +172,11 @@ tinyengine_status convolve_s8_kernel3_stride1_pad1(const q7_t *input, const uint
 
 					load_2row_3col(src, src2, dst, dst2)
 				}
-			} else{ //filled the first two rows
+			} else { // filled the first two rows
 				if (base_idx_x == -1) {
 					/* use pad for the first 1 col*/
-					q31_t *dst_31 = (q31_t*) &col_buffer[0];
-					q31_t *dst2_31 = (q31_t*) &col_buffer[input_ch * 3];
+					q31_t *dst_31 = (q31_t *)&col_buffer[0];
+					q31_t *dst2_31 = (q31_t *)&col_buffer[input_ch * 3];
 
 					pad_2row_1col(dst_31, dst2_31, pad_out_q15x2)
 
@@ -197,23 +190,23 @@ tinyengine_status convolve_s8_kernel3_stride1_pad1(const q7_t *input, const uint
 				} else if (base_idx_x + 2 == input_x) {
 					/* load 2 col*/
 					q15_t *dst = &col_buffer[input_ch * 0];
-					q15_t *dst2  = &col_buffer[input_ch * 3];
-					const q7_t *src = input	+ (base_idx_y * input_x + base_idx_x) * input_ch;
+					q15_t *dst2 = &col_buffer[input_ch * 3];
+					const q7_t *src = input + (base_idx_y * input_x + base_idx_x) * input_ch;
 					const q7_t *src2 = src + in_row_offset;
 
 					load_2row_2col(src, src2, dst, dst2)
 
 					/* use pad for the last 1 col*/
-					q31_t *dst_31 = (q31_t*) dst;
-					q31_t *dst2_31 = (q31_t*) dst2;
+					q31_t *dst_31 = (q31_t *)dst;
+					q31_t *dst2_31 = (q31_t *)dst2;
 
-					pad_2row_1col(dst_31,dst2_31,pad_out_q15x2)
+					pad_2row_1col(dst_31, dst2_31, pad_out_q15x2)
 				} else {
 					/* load 3 col*/
 					q15_t *dst = &col_buffer[input_ch * 0];
-					q15_t *dst2  = &col_buffer[input_ch * 3];
+					q15_t *dst2 = &col_buffer[input_ch * 3];
 					/* load input to 1 col*/
-					const q7_t *src = input	+ (base_idx_y * input_x + base_idx_x) * input_ch;
+					const q7_t *src = input + (base_idx_y * input_x + base_idx_x) * input_ch;
 					const q7_t *src2 = src + in_row_offset;
 
 					load_2row_3col(src, src2, dst, dst2)
@@ -223,19 +216,9 @@ tinyengine_status convolve_s8_kernel3_stride1_pad1(const q7_t *input, const uint
 			two_column_buffer += input_ch * 9;
 
 			/* Computation is filed for every 2 columns */
-			if (two_column_buffer == runtime_buf + 2 * input_ch * 9)
-			{
-				out = mat_mult_kernel_s8_s16(kernel,
-										  runtime_buf,
-										  output_ch,
-										  output_shift,
-										  output_mult,
-										  output_offset,
-										  output_activation_min,
-										  output_activation_max,
-										  input_ch * 9,
-										  bias,
-										  out);
+			if (two_column_buffer == runtime_buf + 2 * input_ch * 9) {
+				out = mat_mult_kernel_s8_s16(kernel, runtime_buf, output_ch, output_shift, output_mult, output_offset,
+											 output_activation_min, output_activation_max, input_ch * 9, bias, out);
 				/* counter reset */
 				two_column_buffer = runtime_buf;
 			}
@@ -243,13 +226,11 @@ tinyengine_status convolve_s8_kernel3_stride1_pad1(const q7_t *input, const uint
 	}
 
 	/* left-over because odd number of output pixels */
-	if (two_column_buffer != runtime_buf)
-	{
+	if (two_column_buffer != runtime_buf) {
 		const q7_t *ker_a = kernel;
 		int i;
 
-		for (i = 0; i < output_ch; i++)
-		{
+		for (i = 0; i < output_ch; i++) {
 			/* Load the accumulator with bias first */
 			q31_t sum = bias[i];
 
@@ -259,8 +240,7 @@ tinyengine_status convolve_s8_kernel3_stride1_pad1(const q7_t *input, const uint
 			/* 4 multiply and accumulates are done in one loop. */
 			uint16_t col_count = (input_ch * 9) >> 2;
 
-			while (col_count)
-			{
+			while (col_count) {
 				q31_t ker_a1, ker_a2;
 				q31_t ip_b1, ip_b2;
 
@@ -275,8 +255,7 @@ tinyengine_status convolve_s8_kernel3_stride1_pad1(const q7_t *input, const uint
 			}
 			/* Handle left over mac */
 			col_count = input_ch * 3 * 3 & 0x3;
-			while (col_count)
-			{
+			while (col_count) {
 				q7_t ker_a1 = *ker_a++;
 				q15_t ip_b1 = *ip_as_col++;
 				sum += ker_a1 * ip_b1;

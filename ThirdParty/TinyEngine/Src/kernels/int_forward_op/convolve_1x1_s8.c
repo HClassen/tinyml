@@ -16,27 +16,27 @@
  * Target ISA:  ARMv7E-M
  * -------------------------------------------------------------------- */
 
+#include <tinyengine/types.h>
+#include <tinyengine/base_ops.h>
+
 #include "arm_nnfunctions.h"
 #include "img2col_element.h"
-#include "tinyengine_function.h"
 
 #define DIM_KER_X (1U)
 #define DIM_KER_Y (1U)
 
-tinyengine_status convolve_1x1_s8(const q7_t *input, const uint16_t input_x,
-		const uint16_t input_y, const uint16_t input_ch, const q7_t *kernel,
-		const int32_t *bias, const int32_t *output_shift,
-		const int32_t *output_mult, const int32_t out_offset,
-		const int32_t input_offset, const int32_t out_activation_min,
-		const int32_t out_activation_max, q7_t *output, const uint16_t output_x,
-		const uint16_t output_y, const uint16_t output_ch, q15_t *runtime_buf) {
+tinyengine_status convolve_1x1_s8(const q7_t *input, const uint16_t input_x, const uint16_t input_y,
+								  const uint16_t input_ch, const q7_t *kernel, const int32_t *bias,
+								  const int32_t *output_shift, const int32_t *output_mult, const int32_t out_offset,
+								  const int32_t input_offset, const int32_t out_activation_min,
+								  const int32_t out_activation_max, q7_t *output, const uint16_t output_x,
+								  const uint16_t output_y, const uint16_t output_ch, q15_t *runtime_buf) {
 	if (input_ch % 4 != 0 || input_ch % 2 != 0) {
 		return PARAM_NO_SUPPORT;
 	}
 
-	int32_t i_element;
-	(void) input_x;
-	(void) input_y;
+	(void)input_x;
+	(void)input_y;
 
 	/* Partial(two columns) im2col buffer */
 	q15_t *two_column_buffer = runtime_buf;
@@ -47,53 +47,50 @@ tinyengine_status convolve_1x1_s8(const q7_t *input, const uint16_t input_x,
 	const int16_t inoff16 = input_offset;
 	q31_t offset_q15x2 = __PKHBT(inoff16, inoff16, 16);
 
-	for (i_element = 0; i_element < num_elements / 2; i_element++) {
+	for (int32_t i_element = 0; i_element < num_elements / 2; i_element++) {
 		/* Fill buffer for partial im2col - two columns at a time */
 		q7_t *src = &input[i_element * input_ch * 2];
 		q15_t *dst = two_column_buffer;
 
-		//use variables
+		// use variables
 		q31_t in_q7x4;
 		q31_t in_q15x2_1;
 		q31_t in_q15x2_2;
 		q31_t out_q15x2_1;
 		q31_t out_q15x2_2;
 
-		int cnt = channel_div4;	//two columns
+		int cnt = channel_div4; // two columns
 		while (cnt > 0) {
 			q7_q15_offset_reordered_ele(src, dst)
-			q7_q15_offset_reordered_ele(src, dst)
-			cnt--;
+            q7_q15_offset_reordered_ele(src, dst)
+            cnt--;
 		}
 
-		out = arm_nn_mat_mult_kernel_s8_s16_reordered(kernel,
-				two_column_buffer, output_ch, output_shift, output_mult,
-				(q7_t) out_offset, out_activation_min,
-				out_activation_max, input_ch * DIM_KER_Y * DIM_KER_X,
-				bias, out);
+		out = arm_nn_mat_mult_kernel_s8_s16_reordered(kernel, two_column_buffer, output_ch, output_shift, output_mult,
+													  (q7_t)out_offset, out_activation_min, out_activation_max,
+													  input_ch * DIM_KER_Y * DIM_KER_X, bias, out);
 	}
 
 	/* check if there is an odd column left-over for computation */
 	if (num_elements & 0x1) {
-		int32_t i_ch_out;
 		const q7_t *ker_a = kernel;
 		q7_t *src = &input[(num_elements - 1) * input_ch];
 		q15_t *dst = two_column_buffer;
 
-		//use variables
+		// use variables
 		q31_t in_q7x4;
 		q31_t in_q15x2_1;
 		q31_t in_q15x2_2;
 		q31_t out_q15x2_1;
 		q31_t out_q15x2_2;
 
-		int cnt = channel_div4;	//two * numof2col columns
+		int cnt = channel_div4; // two * numof2col columns
 		while (cnt > 0) {
 			q7_q15_offset_reordered_ele(src, dst)
-			cnt--;
+            cnt--;
 		}
 
-		for (i_ch_out = 0; i_ch_out < output_ch; i_ch_out++) {
+		for (int32_t i_ch_out = 0; i_ch_out < output_ch; i_ch_out++) {
 			q31_t sum = bias[i_ch_out];
 
 			/* Point to the beginning of the im2col buffer where the input is available as a rearranged column */
@@ -113,12 +110,11 @@ tinyengine_status convolve_1x1_s8(const q7_t *input, const uint16_t input_x,
 				col_count--;
 			}
 
-			sum = arm_nn_requantize(sum, output_mult[i_ch_out],
-					output_shift[i_ch_out]);
+			sum = arm_nn_requantize(sum, output_mult[i_ch_out], output_shift[i_ch_out]);
 			sum += out_offset;
 			sum = MAX(sum, out_activation_min);
 			sum = MIN(sum, out_activation_max);
-			*out++ = (q7_t) sum;
+			*out++ = (q7_t)sum;
 		}
 	}
 

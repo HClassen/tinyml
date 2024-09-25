@@ -43,7 +43,7 @@ void printLog(const char *s) {
 		}
 		is_initialized = 1;
 	}
-	HAL_UART_Transmit(&UART, (uint8_t*) s, strlen(s), 10);
+	HAL_UART_Transmit(&UART, (uint8_t *)s, strlen(s), 10);
 }
 
 void recieveChar(char *s) {
@@ -64,5 +64,5 @@ void recieveChar(char *s) {
 		}
 		is_initialized = 1;
 	}
-	HAL_UART_Receive(&UART, (uint8_t*) s, 1, 10);
+	HAL_UART_Receive(&UART, (uint8_t *)s, 1, 10);
 }

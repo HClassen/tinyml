@@ -17,15 +17,17 @@
  * Target ISA:  ARMv7E-M
  * -------------------------------------------------------------------- */
 
-#include "tinyengine_function_fp.h"
+#include <stdbool.h>
+
+#include <tinyengine/types.h>
 
 tinyengine_status_fp negative(const uint16_t size, const float* input1_data, bool* output_data) {
-  int i;
+	int i;
 
-  for (i = 0; i < size; ++i) {
-    output_data[i] = input1_data[i] < 0;
-  }
-  
-  /* Return to application */
-  return STATE_SUCCESS_fp;
+	for (i = 0; i < size; ++i) {
+		output_data[i] = input1_data[i] < 0;
+	}
+
+	/* Return to application */
+	return STATE_SUCCESS_fp;
 }

@@ -45,50 +45,41 @@
 #include "arm_nnsupportfunctions.h"
 
 /*
-   * Matrix-multiplication function for convolution with per-channel requantization.
-   *
-   * Refer header file for details.
-   *
-   */
+ * Matrix-multiplication function for convolution with per-channel requantization.
+ *
+ * Refer header file for details.
+ *
+ */
 
-q7_t *arm_nn_mat_mult_kernel3_input3_s8_s16(const q7_t *input_a,
-        const q15_t *input_b,
-        const uint16_t output_ch,
-        const int32_t *out_shift,
-        const int32_t *out_mult,
-        const int32_t out_offset,
-        const int16_t activation_min,
-        const int16_t activation_max,
-        const uint16_t num_col_a,
-        const int32_t *const output_bias,
-        q7_t *out_0,
-		q15_t *kbuf)
-{
-    /* set up the second output pointers */
-    q7_t *out_1 = out_0 + output_ch;
-    const int32_t *bias = output_bias;
+q7_t *arm_nn_mat_mult_kernel3_input3_s8_s16(const q7_t *input_a, const q15_t *input_b, const uint16_t output_ch,
+											const int32_t *out_shift, const int32_t *out_mult, const int32_t out_offset,
+											const int16_t activation_min, const int16_t activation_max,
+											const uint16_t num_col_a, const int32_t *const output_bias, q7_t *out_0,
+											q15_t *kbuf) {
+	/* set up the second output pointers */
+	q7_t *out_1 = out_0 + output_ch;
+	const int32_t *bias = output_bias;
 
-    uint16_t row_count = output_ch / 2;
-    const q15_t *ksrc = &kbuf[0];
-    /* this loop over rows in A */
-    while (row_count)
-    {
-        /* setup pointers for B */
-        const q15_t *ip_b0 = input_b;
-        const q15_t *ip_b1 = ip_b0 + num_col_a;
-        const q31_t *ip31_b0 = ip_b0;
-        const q31_t *ip31_b1 = ip_b1;
+	uint16_t row_count = output_ch / 2;
+	const q15_t *ksrc = &kbuf[0];
+	/* this loop over rows in A */
+	while (row_count) {
+		/* setup pointers for B */
+		const q15_t *ip_b0 = input_b;
+		const q15_t *ip_b1 = ip_b0 + num_col_a;
+		const q31_t *ip31_b0 = ip_b0;
+		const q31_t *ip31_b1 = ip_b1;
 
-        /* align the second pointer for A */
-        const q15_t *ksrc2 = ksrc + 27;
-        q31_t *ksrc_31 = ksrc;
-        q31_t *ksrc2_31 = ksrc2;
+		/* align the second pointer for A */
+		const q15_t *ksrc2 = ksrc + 27;
+		q31_t *ksrc_31 = ksrc;
+		q31_t *ksrc2_31 = ksrc2;
 
-        /* Init accumulator with bias for channel N and N + 1 */
-        q31_t ch_0_out_0 = *bias;
-        q31_t ch_0_out_1 = *bias++;
-        q31_t ch_1_out_0 = *bias;
-        q31_t ch_1_out_1 = *bias++;
+		/* Init accumulator with bias for channel N and N + 1 */
+		q31_t ch_0_out_0 = *bias;
+		q31_t ch_0_out_1 = *bias++;
+		q31_t ch_1_out_0 = *bias;
+		q31_t ch_1_out_1 = *bias++;
 
 		//------------------4
 		q31_t a01, a02, a11, a12;
@@ -205,41 +196,41 @@ q7_t *arm_nn_mat_mult_kernel3_input3_s8_s16(const q7_t *input_a,
 		ch_1_out_0 += ksrc2[26] * _b0;
 		ch_1_out_1 += ksrc2[26] * _b1;
 
-        ch_0_out_0 = arm_nn_requantize(ch_0_out_0, *out_mult, *out_shift);
-        ch_0_out_0 += out_offset;
-        ch_0_out_0 = MAX(ch_0_out_0, activation_min);
-        ch_0_out_0 = MIN(ch_0_out_0, activation_max);
-        *out_0++ = (q7_t)ch_0_out_0;
+		ch_0_out_0 = arm_nn_requantize(ch_0_out_0, *out_mult, *out_shift);
+		ch_0_out_0 += out_offset;
+		ch_0_out_0 = MAX(ch_0_out_0, activation_min);
+		ch_0_out_0 = MIN(ch_0_out_0, activation_max);
+		*out_0++ = (q7_t)ch_0_out_0;
 
-        ch_0_out_1 = arm_nn_requantize(ch_0_out_1, *out_mult, *out_shift);
-        ch_0_out_1 += out_offset;
-        ch_0_out_1 = MAX(ch_0_out_1, activation_min);
-        ch_0_out_1 = MIN(ch_0_out_1, activation_max);
-        *out_1++ = (q7_t)ch_0_out_1;
-        out_mult++;
-        out_shift++;
+		ch_0_out_1 = arm_nn_requantize(ch_0_out_1, *out_mult, *out_shift);
+		ch_0_out_1 += out_offset;
+		ch_0_out_1 = MAX(ch_0_out_1, activation_min);
+		ch_0_out_1 = MIN(ch_0_out_1, activation_max);
+		*out_1++ = (q7_t)ch_0_out_1;
+		out_mult++;
+		out_shift++;
 
-        ch_1_out_0 = arm_nn_requantize(ch_1_out_0, *out_mult, *out_shift);
-        ch_1_out_0 += out_offset;
-        ch_1_out_0 = MAX(ch_1_out_0, activation_min);
-        ch_1_out_0 = MIN(ch_1_out_0, activation_max);
-        *out_0++ = (q7_t)ch_1_out_0;
+		ch_1_out_0 = arm_nn_requantize(ch_1_out_0, *out_mult, *out_shift);
+		ch_1_out_0 += out_offset;
+		ch_1_out_0 = MAX(ch_1_out_0, activation_min);
+		ch_1_out_0 = MIN(ch_1_out_0, activation_max);
+		*out_0++ = (q7_t)ch_1_out_0;
 
-        ch_1_out_1 = arm_nn_requantize(ch_1_out_1, *out_mult, *out_shift);
-        ch_1_out_1 += out_offset;
-        ch_1_out_1 = MAX(ch_1_out_1, activation_min);
-        ch_1_out_1 = MIN(ch_1_out_1, activation_max);
-        *out_1++ = (q7_t)ch_1_out_1;
-        out_mult++;
-        out_shift++;
+		ch_1_out_1 = arm_nn_requantize(ch_1_out_1, *out_mult, *out_shift);
+		ch_1_out_1 += out_offset;
+		ch_1_out_1 = MAX(ch_1_out_1, activation_min);
+		ch_1_out_1 = MIN(ch_1_out_1, activation_max);
+		*out_1++ = (q7_t)ch_1_out_1;
+		out_mult++;
+		out_shift++;
 
-        /* skip row */
-        ksrc += 54;
-        row_count--;
-    }
+		/* skip row */
+		ksrc += 54;
+		row_count--;
+	}
 
-    out_0 += output_ch;
+	out_0 += output_ch;
 
-    /* return the new output pointer with offset */
-    return out_0;
+	/* return the new output pointer with offset */
+	return out_0;
 }

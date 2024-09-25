@@ -43,7 +43,7 @@
 #endif
 
 #if INPUT_PRE == 4
-#define	mix_q7_q15_offset_reordered_ele b4_q15_offset_reordered_ele
+#define mix_q7_q15_offset_reordered_ele b4_q15_offset_reordered_ele
 #define mix_load_1row_1col b4_load_1row_1col
 #define mix_load_1row_2col b4_load_1row_2col
 #define mix_load_1row_3col b4_load_1row_3col
@@ -94,7 +94,7 @@
 #define mix_load_7row_6col b4_load_7row_6col
 #define mix_load_7row_7col b4_load_7row_7col
 #elif INPUT_PRE == 2
-#define	mix_q7_q15_offset_reordered_ele b2_q15_offset_reordered_ele
+#define mix_q7_q15_offset_reordered_ele b2_q15_offset_reordered_ele
 #define mix_load_1row_1col b2_load_1row_1col
 #define mix_load_1row_2col b2_load_1row_2col
 #define mix_load_1row_3col b2_load_1row_3col
@@ -198,39 +198,38 @@
 #endif
 
 #if OUTPUT_PRE == 4
-#define	mix_assign_requantize()	b4_assign_requantize()
+#define mix_assign_requantize() b4_assign_requantize()
 #elif OUTPUT_PRE == 2
-#define	mix_assign_requantize()	b2_assign_requantize()
+#define mix_assign_requantize() b2_assign_requantize()
 #else
-#define	mix_assign_requantize()	assign_requantize()
+#define mix_assign_requantize() assign_requantize()
 #endif
 
 #if KERNEL_PRE == 4
-	#if OUTPUT_PRE == 4
+#if OUTPUT_PRE == 4
 #define mix_nn_mat_mult_kernel_s8_s16_reordered b44_nn_mat_mult_kernel_s8_s16_reordered
 #define mix_nn_mat_mult_kernel_s8_s16_reordered_8mul b44_nn_mat_mult_kernel_s8_s16_reordered_8mul
-	#elif OUTPUT_PRE == 2
+#elif OUTPUT_PRE == 2
 #define mix_nn_mat_mult_kernel_s8_s16_reordered b42_nn_mat_mult_kernel_s8_s16_reordered
 #define mix_nn_mat_mult_kernel_s8_s16_reordered_8mul b42_nn_mat_mult_kernel_s8_s16_reordered_8mul
-	#else
+#else
 #define mix_nn_mat_mult_kernel_s8_s16_reordered b48_nn_mat_mult_kernel_s8_s16_reordered
 #define mix_nn_mat_mult_kernel_s8_s16_reordered_8mul b48_nn_mat_mult_kernel_s8_s16_reordered_8mul
-	#endif//OUTPUT
+#endif //OUTPUT
 #elif KERNEL_PRE == 2
-	#if OUTPUT_PRE == 4
+#if OUTPUT_PRE == 4
 #define mix_nn_mat_mult_kernel_s8_s16_reordered b24_nn_mat_mult_kernel_s8_s16_reordered
 #define mix_nn_mat_mult_kernel_s8_s16_reordered_8mul b24_nn_mat_mult_kernel_s8_s16_reordered_8mul
-	#elif OUTPUT_PRE == 2
+#elif OUTPUT_PRE == 2
 #define mix_nn_mat_mult_kernel_s8_s16_reordered b22_nn_mat_mult_kernel_s8_s16_reordered
 #define mix_nn_mat_mult_kernel_s8_s16_reordered_8mul b22_nn_mat_mult_kernel_s8_s16_reordered_8mul
 #else
 #define mix_nn_mat_mult_kernel_s8_s16_reordered b28_nn_mat_mult_kernel_s8_s16_reordered
 #define mix_nn_mat_mult_kernel_s8_s16_reordered_8mul b28_nn_mat_mult_kernel_s8_s16_reordered_8mul
-	#endif//OUTPUT
+#endif //OUTPUT
 #else
-	#define mix_nn_mat_mult_kernel_s8_s16_reordered arm_nn_mat_mult_kernel_s8_s16_reordered
-	#define mix_nn_mat_mult_kernel_s8_s16_reordered_8mul arm_nn_mat_mult_kernel_s8_s16_reordered_8mul
+#define mix_nn_mat_mult_kernel_s8_s16_reordered arm_nn_mat_mult_kernel_s8_s16_reordered
+#define mix_nn_mat_mult_kernel_s8_s16_reordered_8mul arm_nn_mat_mult_kernel_s8_s16_reordered_8mul
 #endif
-
 
 #endif /* TINYENGINE_SOURCE_CONVOLUTIONFUNCTIONS_MIX_MUTABLE_FUNCTION_H_ */

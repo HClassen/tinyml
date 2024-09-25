@@ -166,68 +166,32 @@ extern "C" {
  *
  */
 
-    arm_status arm_convolve_s8_4col(const q7_t *input,
-                                    const uint16_t input_x,
-                                    const uint16_t input_y,
-                                    const uint16_t input_ch,
-                                    const uint16_t input_batches,
-                                    const q7_t *kernel,
-                                    const uint16_t output_ch,
-                                    const uint16_t kernel_x,
-                                    const uint16_t kernel_y,
-                                    const uint16_t pad_x,
-                                    const uint16_t pad_y,
-                                    const uint16_t stride_x,
-                                    const uint16_t stride_y,
-                                    const int32_t *bias,
-                                    q7_t *output,
-                                    const int32_t *output_shift,
-                                    const int32_t *output_mult,
-                                    const int32_t out_offset,
-                                    const int32_t input_offset,
-                                    const int32_t out_activation_min,
-                                    const int32_t out_activation_max,
-                                    const uint16_t output_x,
-                                    const uint16_t output_y,
-                                    q15_t *buffer_a);
+arm_status arm_convolve_s8_4col(const q7_t *input, const uint16_t input_x, const uint16_t input_y,
+								const uint16_t input_ch, const uint16_t input_batches, const q7_t *kernel,
+								const uint16_t output_ch, const uint16_t kernel_x, const uint16_t kernel_y,
+								const uint16_t pad_x, const uint16_t pad_y, const uint16_t stride_x,
+								const uint16_t stride_y, const int32_t *bias, q7_t *output, const int32_t *output_shift,
+								const int32_t *output_mult, const int32_t out_offset, const int32_t input_offset,
+								const int32_t out_activation_min, const int32_t out_activation_max,
+								const uint16_t output_x, const uint16_t output_y, q15_t *buffer_a);
 
+q7_t *arm_nn_mat_mult_kernel_s8_s16_reordered_oddch(const q7_t *input_a, const q15_t *input_b, const uint16_t output_ch,
+													const int32_t *out_shift, const int32_t *out_mult,
+													const int32_t out_offset, const int16_t activation_min,
+													const int16_t activation_max, const uint16_t num_col_a,
+													const int32_t *const output_bias, q7_t *out_0);
 
-    q7_t *arm_nn_mat_mult_kernel_s8_s16_reordered_oddch(const q7_t *input_a,
-                                                        const q15_t *input_b,
-                                                        const uint16_t output_ch,
-                                                        const int32_t *out_shift,
-                                                        const int32_t *out_mult,
-                                                        const int32_t out_offset,
-                                                        const int16_t activation_min,
-                                                        const int16_t activation_max,
-                                                        const uint16_t num_col_a,
-                                                        const int32_t *const output_bias,
-                                                        q7_t *out_0);
+q7_t *arm_nn_mat_mult_kernel_s8_s16_reordered_8mul(const q7_t *input_a, const q15_t *input_b, const uint16_t output_ch,
+												   const int32_t *out_shift, const int32_t *out_mult,
+												   const int32_t out_offset, const int16_t activation_min,
+												   const int16_t activation_max, const uint16_t num_col_a,
+												   const int32_t *const output_bias, q7_t *out_0);
 
-    q7_t *arm_nn_mat_mult_kernel_s8_s16_reordered_8mul(const q7_t *input_a,
-                                                       const q15_t *input_b,
-                                                       const uint16_t output_ch,
-                                                       const int32_t *out_shift,
-                                                       const int32_t *out_mult,
-                                                       const int32_t out_offset,
-                                                       const int16_t activation_min,
-                                                       const int16_t activation_max,
-                                                       const uint16_t num_col_a,
-                                                       const int32_t *const output_bias,
-                                                       q7_t *out_0);
-
-    q7_t *arm_nn_mat_mult_kernel3_input3_s8_s16(const q7_t *input_a,
-                                                const q15_t *input_b,
-                                                const uint16_t output_ch,
-                                                const int32_t *out_shift,
-                                                const int32_t *out_mult,
-                                                const int32_t out_offset,
-                                                const int16_t activation_min,
-                                                const int16_t activation_max,
-                                                const uint16_t num_col_a,
-                                                const int32_t *const output_bias,
-                                                q7_t *out_0,
-                                                q15_t *kbuf);
+q7_t *arm_nn_mat_mult_kernel3_input3_s8_s16(const q7_t *input_a, const q15_t *input_b, const uint16_t output_ch,
+											const int32_t *out_shift, const int32_t *out_mult, const int32_t out_offset,
+											const int16_t activation_min, const int16_t activation_max,
+											const uint16_t num_col_a, const int32_t *const output_bias, q7_t *out_0,
+											q15_t *kbuf);
 
 #ifdef __cplusplus
 }

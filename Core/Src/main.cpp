@@ -16,17 +16,26 @@
   */
 /* Includes ------------------------------------------------------------------*/
 #include <stdio.h>
+#include <string.h>
 
 #include "main.h"
 #include "stm32746g_discovery.h"
 #include "stm32746g_discovery_lcd.h"
 
+#include "tinyengine/gen_nn.h"
+
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+void PeriphCommonClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
+static void MX_RTC_Init(void);
+
+extern unsigned char image[24300];
 
 UART_HandleTypeDef huart1;
+
+RTC_HandleTypeDef hrtc;
 
 /**
   * @brief  The application entry point.
@@ -40,9 +49,13 @@ int main(void)
 	/* Configure the system clock */
 	SystemClock_Config();
 
+	/* Configure the peripherals common clocks */
+	PeriphCommonClock_Config();
+
 	/* Initialize all configured peripherals */
 	MX_GPIO_Init();
 	MX_USART1_UART_Init();
+	// MX_RTC_Init();
 
 	BSP_LED_Init(LED_GREEN);
 
@@ -74,10 +87,23 @@ int main(void)
 
 	printf("Hello World!\n\r");
 
-	while (1)
+	memcpy(getInput(), image, sizeof(image));
+
+	uint32_t sum = 0;
+	for (int i = 0; i < 1000; i++)
 	{
-		printf("1");
+		uint32_t start = HAL_GetTick();
+
+		invoke(NULL);
+
+		uint32_t end = HAL_GetTick();
+
+		sum += end - start;
 	}
+
+	printf("Execution time: %lu ms (1000 times avg)\r\n", uint32_t(sum / 1000));
+
+	while (1);
 }
 
 /**
@@ -88,6 +114,10 @@ void SystemClock_Config(void)
 {
 	RCC_OscInitTypeDef RCC_OscInitStruct = {0};
 	RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+
+	/** Configure LSE Drive Capability
+	*/
+	HAL_PWR_EnableBkUpAccess();
 
 	/** Configure the main internal regulator output voltage
 	*/
@@ -121,6 +151,24 @@ void SystemClock_Config(void)
 	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
 	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
+	{
+		Error_Handler();
+	}
+}
+
+/**
+  * @brief Peripherals Common Clock Configuration
+  * @retval None
+  */
+void PeriphCommonClock_Config(void)
+{
+	RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
+
+	/** Initializes the peripherals clock
+	*/
+	PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_RTC;
+	PeriphClkInitStruct.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
+	if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
 	{
 		Error_Handler();
 	}
@@ -666,6 +714,45 @@ static void MX_USART1_UART_Init(void)
 	{
 		Error_Handler();
 	}
+}
+
+/**
+  * @brief RTC Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_RTC_Init(void)
+{
+  RTC_TimeTypeDef sTime = {0};
+
+  /** Initialize RTC Only
+  */
+  hrtc.Instance = RTC;
+  hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
+  hrtc.Init.AsynchPrediv = 127;
+  hrtc.Init.SynchPrediv = 255;
+  hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
+  hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+  hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+  if (HAL_RTC_Init(&hrtc) != HAL_OK)
+  {
+	  printf("a %d\r\n", hrtc.State);
+	  Error_Handler();
+  }
+
+  /** Initialize RTC and set the Time and Date
+  */
+  sTime.Hours = 0x0;
+  sTime.Minutes = 0x0;
+  sTime.Seconds = 0x0;
+  sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+  sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+  if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK)
+  {
+	  printf("b\r\n");
+	  Error_Handler();
+  }
+
 }
 
 /**

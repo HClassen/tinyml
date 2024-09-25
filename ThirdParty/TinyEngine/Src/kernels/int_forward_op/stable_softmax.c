@@ -16,25 +16,28 @@
  * Target ISA:  ARMv7E-M
  * -------------------------------------------------------------------- */
 
-#include "tinyengine_function.h"
 #include <float.h>
 #include <math.h>
 
-tinyengine_status statble_softmax_inplace(float *input, const uint16_t length)
-{
+#include <tinyengine/types.h>
+#include <tinyengine/base_ops.h>
+
+tinyengine_status stable_softmax_inplace(float *input, const uint16_t length) {
 	float max = FLT_MIN;
 	float exp_sum = 0;
-	uint16_t i;
-	for (i = 0; i < length; i++){
-		if (input[i] > max) max = input[i];
+
+	for (uint16_t i = 0; i < length; i++) {
+		if (input[i] > max)
+            max = input[i];
 	}
 
 	// inplace update
-	for (i = 0; i < length; i++){
+	for (uint16_t i = 0; i < length; i++) {
 		input[i] = exp(input[i] - max);
 		exp_sum += input[i];
 	}
-	for (i = 0; i < length; i++){
+
+	for (uint16_t i = 0; i < length; i++) {
 		input[i] = input[i] / exp_sum;
 	}
 }

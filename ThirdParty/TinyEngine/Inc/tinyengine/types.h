@@ -1,6 +1,6 @@
 /* ----------------------------------------------------------------------
  * Project: TinyEngine
- * Title:   tinyengine_lib.h
+ * Title:   types.h
  *
  * Reference papers:
  *  - MCUNet: Tiny Deep Learning on IoT Device, NeurIPS 2020
@@ -16,9 +16,14 @@
  * Target ISA:  ARMv7E-M
  * -------------------------------------------------------------------- */
 
-#ifndef TINYENGINE_INCLUDE_TINYENGINE_FUNCTIONLIB_H_
-#define TINYENGINE_INCLUDE_TINYENGINE_FUNCTIONLIB_H_
-#include <stdio.h>
+#ifndef TINYENGINE_TYPES_H_
+#define TINYENGINE_TYPES_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <stdint.h>
 
 typedef int8_t q7_t;
 typedef uint8_t q8_t;
@@ -27,5 +32,18 @@ typedef uint16_t q16_t;
 typedef int32_t q31_t;
 typedef uint32_t q32_t;
 
+typedef enum {
+	STATE_SUCCESS = 0,	  /* No error */
+	PARAM_NO_SUPPORT = 1, /* Unsupported parameters */
+} tinyengine_status;
 
-#endif /* TINYENGINE_INCLUDE_TINYENGINE_FUNCTIONLIB_H_ */
+typedef enum {
+	STATE_SUCCESS_fp = 0,	 /* No error */
+	PARAM_NO_SUPPORT_fp = 1, /* Unsupported parameters */
+} tinyengine_status_fp;
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* TINYENGINE_TYPES_H_ */

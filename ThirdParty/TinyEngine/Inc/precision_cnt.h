@@ -27,5 +27,4 @@
 #define weight_scaler (8 / KERNEL_PRE)
 #define output_scaler (8 / OUTPUT_PRE)
 
-
 #endif /* TINYENGINE_SOURCE_CONVOLUTIONFUNCTIONS_MIX_PRECISION_CNT_H_ */
